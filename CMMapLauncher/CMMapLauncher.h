@@ -77,6 +77,13 @@ typedef NS_ENUM(NSUInteger, CMMapApp) {
      forDirectionsTo:(CMMapPoint *)end;
 
 /**
+ 
+ */
++ (BOOL)launchMapApp:(CMMapApp)mapApp
+     forDirectionsTo:(CMMapPoint *)end
+      directionsMode:(NSString *)directionsMode;
+
+/**
  Launches the specified mapping application with directions
  between the two specified endpoints.
  
@@ -89,6 +96,15 @@ typedef NS_ENUM(NSUInteger, CMMapApp) {
 + (BOOL)launchMapApp:(CMMapApp)mapApp
    forDirectionsFrom:(CMMapPoint *)start
                   to:(CMMapPoint *)end;
+
+/**
+ 
+ 
+ */
++ (BOOL)launchMapApp:(CMMapApp)mapApp
+   forDirectionsFrom:(CMMapPoint *)start
+                  to:(CMMapPoint *)end
+      directionsMode:(NSString *)directionsMode;
 
 @end
 
