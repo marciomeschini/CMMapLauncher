@@ -99,25 +99,19 @@
 }
 
 + (BOOL)launchMapApp:(CMMapApp)mapApp forDirectionsTo:(CMMapPoint *)end {
-    return [CMMapLauncher launchMapApp:mapApp forDirectionsTo:end directionsMode:nil];
-}
-
-+ (BOOL)launchMapApp:(CMMapApp)mapApp
-     forDirectionsTo:(CMMapPoint *)end
-      directionsMode:(NSString *)directionsMode {
-    return [CMMapLauncher launchMapApp:mapApp forDirectionsFrom:[CMMapPoint currentLocation] to:end directionsMode:directionsMode];
+    return [CMMapLauncher launchMapApp:mapApp forDirectionsFrom:[CMMapPoint currentLocation] to:end options:nil];
 }
 
 + (BOOL)launchMapApp:(CMMapApp)mapApp
    forDirectionsFrom:(CMMapPoint *)start
                   to:(CMMapPoint *)end {
-    return [CMMapLauncher launchMapApp:mapApp forDirectionsFrom:start to:end directionsMode:nil];
+    return [CMMapLauncher launchMapApp:mapApp forDirectionsFrom:start to:end options:nil];
 }
 
 + (BOOL)launchMapApp:(CMMapApp)mapApp
    forDirectionsFrom:(CMMapPoint *)start
                   to:(CMMapPoint *)end
-      directionsMode:(NSString *)directionsMode {
+             options:(NSDictionary *)options {
     if (![CMMapLauncher isMapAppInstalled:mapApp]) {
         return NO;
     }
@@ -126,14 +120,7 @@
         // Check for iOS 6
         Class mapItemClass = [MKMapItem class];
         if (mapItemClass && [mapItemClass respondsToSelector:@selector(openMapsWithItems:launchOptions:)]) {
-            NSDictionary *launchOptions;
-            NSSet *allowedDirectionsModes = [NSSet setWithArray:@[MKLaunchOptionsDirectionsModeDriving, MKLaunchOptionsDirectionsModeWalking]];
-            if (directionsMode && [allowedDirectionsModes containsObject:directionsMode]) {
-                launchOptions = @{MKLaunchOptionsDirectionsModeKey: directionsMode};
-            } else {
-                launchOptions = @{MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving};
-            }
-            return [MKMapItem openMapsWithItems:@[start.MKMapItem, end.MKMapItem] launchOptions:launchOptions];
+            return [MKMapItem openMapsWithItems:@[start.MKMapItem, end.MKMapItem] launchOptions:options];
         } else {  // iOS 5
             NSString *url = [NSString stringWithFormat:@"http://maps.google.com/maps?saddr=%@&daddr=%@",
                              [CMMapLauncher googleMapsStringForMapPoint:start],
@@ -146,10 +133,11 @@
                                 [CMMapLauncher googleMapsStringForMapPoint:start],
                                 [CMMapLauncher googleMapsStringForMapPoint:end]
                                 ] mutableCopy];
-        if (directionsMode) {
-            [url appendFormat:@"&directionsmode=%@", directionsMode];
+        if (options) {
+            [options enumerateKeysAndObjectsUsingBlock:^(NSString *key, NSString *value, BOOL * _Nonnull stop) {
+                [url appendFormat:@"&%@=%@", key, value];
+            }];
         }
-        
         return [[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
     } else if (mapApp == CMMapAppCitymapper) {
         NSMutableArray *params = [NSMutableArray arrayWithCapacity:10];
@@ -208,6 +196,18 @@
     }
     
     return NO;
+}
+
++ (NSString *)directionsModeKeyForMapApp:(CMMapApp)mapApp {
+    if (mapApp == CMMapAppAppleMaps) {
+        return MKLaunchOptionsDirectionsModeKey;
+    }
+    
+    if (mapApp == CMMapAppGoogleMaps) {
+        return @"directionsmode";
+    }
+    
+    return nil;
 }
 
 @end
